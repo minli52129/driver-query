@@ -108,6 +108,19 @@
     .phone { font-family: 'SF Mono', Monaco, monospace; color: #667eea; font-weight: 500; }
     .plate { font-family: 'SF Mono', Monaco, monospace; }
     .empty { color: #cbd5e0; font-style: italic; }
+    .copy-btn {
+      padding: 6px 14px;
+      background: #edf2f7;
+      color: #4a5568;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { background: #667eea; color: white; box-shadow: none; transform: none; }
+    .copy-btn.copied { background: #48bb78; color: white; }
     .scroll-wrapper {
       max-height: 70vh;
       overflow-y: auto;
@@ -143,6 +156,7 @@
               <th>电话</th>
               <th>备用电话</th>
               <th>车牌号</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody id="resultBody"></tbody>
@@ -210,6 +224,7 @@
           <td class="phone">${esc(d.phone)}</td>
           <td class="phone">${d.backup_phone ? esc(d.backup_phone) : '<span class="empty">-</span>'}</td>
           <td class="plate">${esc(d.plate) || '<span class="empty">-</span>'}</td>
+          <td><button class="copy-btn" onclick="copyRow(this, ${JSON.stringify(d).replace(/"/g, '&quot;')})">复制</button></td>
         </tr>
       `).join('');
     }
@@ -218,6 +233,22 @@
       const div = document.createElement('div');
       div.textContent = s;
       return div.innerHTML;
+    }
+
+    function copyRow(btn, d) {
+      const lines = [
+        `姓名：${d.name}`,
+        `车型：${d.car || '-'}`,
+        `电话：${d.phone}`,
+        d.backup_phone ? `备用电话：${d.backup_phone}` : null,
+        `车牌号：${d.plate || '-'}`,
+      ].filter(Boolean);
+      const text = lines.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已复制';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1500);
+      });
     }
 
     document.getElementById('searchInput').addEventListener('keydown', e => {
