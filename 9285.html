@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>龙腾出行 4月订单核对</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; color: #1e1e1e; border-bottom: 2px solid #eef0f4; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .stats { font-size: 14px; background: #e8f5e9; color: #2e7d32; padding: 6px 14px; border-radius: 20px; font-weight: bold; }
+        .tips { font-size: 13px; color: #666; background: #fff3e0; padding: 10px; border-left: 4px solid #ffb74d; margin-bottom: 20px; border-radius: 0 4px 4px 0; display: flex; justify-content: space-between; align-items: center; }
+        .reset-btn { background: #dc3545; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .reset-btn:hover { background: #bd2130; }
+        .link-list { display: flex; flex-direction: column; gap: 10px; }
+        .link-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #fafafa; border: 1px solid #eef0f4; border-radius: 8px; text-decoration: none; color: #007bff; font-size: 14px; word-break: break-all; transition: all 0.2s; }
+        .link-item:hover { background: #f0f7ff; border-color: #007bff; }
+        .link-item.visited { color: #999; background: #f5f5f5; border-color: #ddd; text-decoration: line-through; }
+        .badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .badge-new { background: #e3f2fd; color: #0d47a1; }
+        .badge-visited { background: #eeeeee; color: #616161; text-decoration: none !important; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>
+        <span>✈️ 龙腾4月订单核对列表 (197条)</span>
+        <span class="stats" id="counter">已检查: 0 / 197</span>
+    </h2>
+    <div class="tips">
+        <span>💡 <b>防丢功能已启用：</b>点击后自动变灰并保存进度，刷新网页不会丢失记录。</span>
+        <button class="reset-btn" onclick="resetProgress()">清空核对记录</button>
+    </div>
+    
+    <div class="link-list" id="list-container">
+        </div>
+</div>
+
+<script>
+    // 导入的 199 条订单数据
+    const urls = [
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSRC5EV&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS795G9&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSRUZ3C&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSPDZOX&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSEFLRY&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSG9KT2&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS6W75X&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS6HIR3&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSGP5PJ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSFMPME&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSRFQ26&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS6KQ9O&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSIJQRO&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSUNASD&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSGQEWY&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS8E5ZY&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSCX3Z2&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSD9UWJ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSXHGX2&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSGBS5X&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSR2LNU&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS34C9B&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSUXUYL&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSPBXP3&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSADOH3&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSI5FRP&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSNKPVX&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSGFKN7&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BST8NZS&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS8ARMB&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSRL6AK&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSKV4RW&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSOHQPL&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSP9FFE&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS9LAC5&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSQNCZR&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSXFUBW&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSUWNEN&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSZ1L3S&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS4CCZN&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS9BKHJ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS9LG1F&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS25JWL&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSPCHRD&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSGLA7G&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSPO15W&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSRVLW5&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSFZSM8&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSMIANG&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSNMQU5&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSTR98B&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSQ3VZH&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSXAO75&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSN2YCN&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSL18PC&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS58Y5A&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSEO1TK&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSZ0V3L&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSM43P8&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSF8EKL&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSO75O9&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSF068W&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS760PF&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSKHSBV&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BS9R2HJ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BSUF0DC&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRFY619&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRI2CI9&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRHPZM7&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRNLNAD&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRWWXW7&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRTPQAI&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR2GYHC&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRLRHMY&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRO2QP5&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRC0EI2&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR65N7N&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRDXV0C&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR2GDM5&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRAK1VB&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRDYEUK&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRKRSPM&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR2ZELP&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR0EXJS&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRF7G76&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRUDIY6&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR33JPX&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BREDMFT&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRKUVBA&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR66Q3R&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR53PUN&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRVCYZR&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR3LPX1&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRH1NV4&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BREYLYG&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRTH4I1&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRHEUYK&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRUN8XE&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRQQLFT&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR5O6R0&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRVBPHG&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRYKH6F&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRZ12GN&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR1LJ93&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRDLS8B&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR8RKMK&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR2E7EU&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRORM6U&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR93YU0&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRHRW9M&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRDNW7P&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRMJW7Q&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRC3FHJ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRQ33TT&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRPTTS9&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRAZD3V&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR8IW9I&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR715YX&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRJAWMN&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRGQA3V&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR1MARA&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR20YRR&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR6MX5G&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRH8VQH&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRQXETE&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR5K7S4&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRHKQGM&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR3OA7L&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BROSWVQ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR1RDLJ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRI6J4X&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR9896I&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR1TCQZ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR1889L&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRQP2RV&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRZJ0U8&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRO0MFO&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR23U1P&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRUZ8SK&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRIO6MD&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR2NDVE&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRMOTD6&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRJ3JOX&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR406FI&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRDTC9R&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRSJP43&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRH0BMH&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR72J3Q&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRMAMWW&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRD43V7&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRQK631&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR62G3F&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR4X9PO&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRN0585&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRR9NX6&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR1LZJM&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRPFVI8&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRL97AC&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRW9I1V&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRVW6MK&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR0UOXT&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRTUULB&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRDGTBA&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRCQUKW&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRMYEQ1&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRT6863&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRB59JM&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRG0RX0&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR4X3QV&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR4GM2P&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRFO4VO&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRFAEY5&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR0CH5S&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BRW0YDG&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BR06K11&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ8WNUE&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ30UYN&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQZEGEL&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ2YXJA&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQO8NCB&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQEEAYJ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ0WUHR&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQO2PVN&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQL4M5A&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQO6G8O&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ8QP76&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ7TXOL&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ37FFR&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQJP1F8&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQPPBK4&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ8F410&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQGKDGE&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ04O90&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ65W02&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQAG3TH&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQ7MSAJ&type=LS",
+        "https://h5-quanyi.dragonpass.com.cn/#/order/orderDetail?orderNo=CO20260623BQGP1U2&type=LS"
+    ];
+
+    const STORAGE_KEY = 'dp_visited_orders_v3';
+    const container = document.getElementById('list-container');
+    const counter = document.getElementById('counter');
+    
+    // 从 LocalStorage 读取已检查的订单集合
+    let visitedOrders = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+
+    function updateCounter() {
+        counter.innerText = `已检查: ${visitedOrders.size} / ${urls.length}`;
+    }
+
+    // 渲染网页列表
+    urls.forEach((url, index) => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.className = 'link-item';
+        
+        const orderNo = url.match(/orderNo=([^&]+)/)?.[1] || `订单 ${index + 1}`;
+        a.dataset.orderNo = orderNo; // 存入节点方便管理
+
+        // 如果该订单已被记录，初始化时直接设为已检查状态
+        if (visitedOrders.has(orderNo)) {
+            a.className = 'link-item visited';
+            a.innerHTML = `
+                <span>序号 ${String(index + 1).padStart(3, '0')} &nbsp;|&nbsp; 订单号: <b>${orderNo}</b></span>
+                <span class="badge badge-visited" id="badge-${index}">已点开</span>
+            `;
+        } else {
+            a.innerHTML = `
+                <span>序号 ${String(index + 1).padStart(3, '0')} &nbsp;|&nbsp; 订单号: <b>${orderNo}</b></span>
+                <span class="badge badge-new" id="badge-${index}">待检查</span>
+            `;
+        }
+
+        a.onclick = function() {
+            if (!this.classList.contains('visited')) {
+                this.classList.add('visited');
+                visitedOrders.add(orderNo);
+                
+                // 同步存储到本地
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(visitedOrders)));
+                updateCounter();
+                
+                const badge = document.getElementById(`badge-${index}`);
+                badge.className = 'badge badge-visited';
+                badge.innerText = '已点开';
+            }
+        };
+
+        container.appendChild(a);
+    });
+
+    // 清空进度的函数
+    function resetProgress() {
+        if (confirm('确定要清空所有已点击的记录，重新核对吗？')) {
+            localStorage.removeItem(STORAGE_KEY);
+            visitedOrders.clear();
+            location.reload(); // 刷新页面重置UI
+        }
+    }
+
+    updateCounter();
+</script>
+
+</body>
+</html>
